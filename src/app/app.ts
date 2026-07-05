@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
@@ -102,4 +102,29 @@ export class App implements OnInit, OnDestroy {
 
   hoverFocus(id: string): void { this.focus.setFocus(id); }
   clearFocus(): void { this.focus.setFocus(null); }
+
+  /**
+   * Entries whose JSON block is currently collapsed. Default is expanded, so
+   * this set holds only the ones the user has explicitly folded away.
+   */
+  private collapsedIds = signal<Set<number>>(new Set());
+
+  isJsonCollapsed(id: number): boolean {
+    return this.collapsedIds().has(id);
+  }
+
+  toggleJsonCollapsed(id: number): void {
+    const next = new Set(this.collapsedIds());
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    this.collapsedIds.set(next);
+  }
+
+  prettyJson(value: unknown): string {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  }
 }

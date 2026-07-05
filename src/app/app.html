@@ -94,25 +94,43 @@
           <li class="log-entry" [class]="'entry-type-' + entry.type.replaceAll('_', '-')">
             <div class="log-entry-main">
               <span class="entry-time">{{ entry.time }}</span>
-              @if (entry.type === 'user_speech' && entry.audio) {
-                <button class="btn-play"
-                        [class.playing]="playback.playingEntryId() === entry.id"
-                        (click)="toggleEntryPlayback(entry)"
-                        title="Play / stop audio">
-                  {{ playback.playingEntryId() === entry.id ? '■' : '▶' }}
-                </button>
-              } @else if (entry.audio) {
-                <button class="btn-play" (click)="playRawAudio(entry.audio)" title="Play audio">▶</button>
-              }
               <span class="entry-type">{{ entry.type }}</span>
-              @if (entry.detail) {
+              @if (entry.type === 'user_speech' && entry.audio) {
+                <span class="entry-detail user-speech-detail">
+                  <button class="btn-play"
+                          [class.playing]="playback.playingEntryId() === entry.id"
+                          (click)="toggleEntryPlayback(entry)"
+                          title="Play / stop audio">
+                    {{ playback.playingEntryId() === entry.id ? '■' : '▶' }}
+                  </button>
+                  <span>speech audio received ({{ entry.audioDurationMs ?? 0 }}ms)</span>
+                </span>
+              } @else if (entry.audio) {
+                <span class="entry-detail inline-detail">
+                  <button class="btn-play" (click)="playRawAudio(entry.audio)" title="Play audio">▶</button>
+                  @if (entry.detail) { <span>{{ entry.detail }}</span> }
+                </span>
+              } @else if (entry.expandedJson !== undefined) {
+                <span class="entry-detail inline-detail">
+                  <button class="btn-toggle-json"
+                          (click)="toggleJsonCollapsed(entry.id)"
+                          [title]="isJsonCollapsed(entry.id) ? 'Expand payload' : 'Collapse payload'">
+                    {{ isJsonCollapsed(entry.id) ? '+' : '−' }}
+                  </button>
+                  <span>{{ entry.detail }}</span>
+                </span>
+              } @else if (entry.detail) {
                 <span class="entry-detail">{{ entry.detail }}</span>
               }
             </div>
 
+            @if (entry.expandedJson !== undefined && !isJsonCollapsed(entry.id)) {
+              <pre class="log-json">{{ prettyJson(entry.expandedJson) }}</pre>
+            }
+
             @if (entry.type === 'user_speech' && entry.deltas && entry.deltas.length > 0) {
               <div class="deltas">
-                <span class="deltas-label">Transcription latency (received vs audio):</span>
+                <span class="deltas-label">Transcription (latency: received vs audio)</span>
                 @for (d of entry.deltas; track $index; let i = $index) {
                   <span class="delta"
                         [class.delta-active]="playback.activeDeltaIndex(entry) === i"

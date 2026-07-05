@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { ServerMessage } from '../protocol/messages';
+import { AUDIO_FORMAT } from '../protocol/audio';
 
 export interface TranscriptDelta {
   delta: string;
@@ -13,6 +14,8 @@ export interface LogEntry {
   detail: string;
   audio?: string;
   audioStartWallclockMs?: number;
+  /** Duration of `audio` in milliseconds. Precomputed once at ingestion. */
+  audioDurationMs?: number;
   itemId?: string;
   deltas?: TranscriptDelta[];
   /**
@@ -21,6 +24,11 @@ export interface LogEntry {
    * (or null when the reference could not be resolved).
    */
   deixisMarks?: Map<number, string | null>;
+  /**
+   * Structured payload rendered as pretty-printed JSON below the header row.
+   * Used for tool_call args and tool_result results.
+   */
+  expandedJson?: unknown;
 }
 
 interface ResolveDeixisResolution {
@@ -86,6 +94,7 @@ export class LogService {
           type: 'user_speech',
           audio: msg.audio,
           audioStartWallclockMs: msg.audioStartWallclockMs,
+          audioDurationMs: pcm16Base64DurationMs(msg.audio),
           itemId: msg.itemId,
           deltas: this.pendingDeltasByItemId.get(msg.itemId),
           detail: this.pendingTranscriptsByItemId.get(msg.itemId) ?? '',
@@ -106,11 +115,11 @@ export class LogService {
         this.pushEntry({ type: 'response_started' });
         return;
       case 'tool_call':
-        this.pushEntry({ type: 'tool_call', detail: `${msg.name}  ${JSON.stringify(msg.args)}` });
+        this.pushEntry({ type: 'tool_call', detail: msg.name, expandedJson: msg.args });
         return;
       case 'tool_result':
         if (msg.name === 'resolve_deixis') this.handleDeixisResult(msg.result);
-        this.pushEntry({ type: 'tool_result', detail: `${msg.name}  ->  ${JSON.stringify(msg.result)}` });
+        this.pushEntry({ type: 'tool_result', detail: msg.name, expandedJson: msg.result });
         return;
       case 'error':
         this.pushEntry({ type: 'error', detail: msg.message });
@@ -216,4 +225,16 @@ export class LogService {
       return next;
     });
   }
+}
+
+/**
+ * Duration in milliseconds of a base64-encoded PCM16 mono blob at
+ * AUDIO_FORMAT.sampleRate. base64 length -> raw bytes -> samples -> ms.
+ */
+function pcm16Base64DurationMs(base64: string): number {
+  const paddingMatch = base64.match(/=+$/);
+  const padding = paddingMatch ? paddingMatch[0].length : 0;
+  const bytes = Math.max(0, Math.floor((base64.length * 3) / 4) - padding);
+  const bytesPerMs = (AUDIO_FORMAT.sampleRate * 2) / 1000; // 16-bit mono
+  return Math.round(bytes / bytesPerMs);
 }
