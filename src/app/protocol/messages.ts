@@ -44,9 +44,10 @@ export interface ErrorMessage {
 
 // ─── /monitor-only Server -> Debug-Client streams ─────────────────────────────
 
-/** Final user transcript for the last speech turn. Monitor-only. */
+/** Final user transcript for the referenced turn. Monitor-only. */
 export interface UserTranscriptMessage {
   type: 'user_transcript';
+  itemId: string;
   transcript: string;
 }
 
@@ -59,10 +60,12 @@ export interface AssistantTranscriptMessage {
 /**
  * Complete PCM16 audio (base64) of the user turn from speech_started to
  * speech_ended, plus the wallclock timestamp of the recording anchor (t=0
- * of the audio blob). Monitor-only — used for playback and delta alignment.
+ * of the audio blob) and the OpenAI conversation item id that keys the
+ * transcript and every delta for this turn. Monitor-only.
  */
 export interface UserSpeechMessage {
   type: 'user_speech';
+  itemId: string;
   audio: string;
   audioStartWallclockMs: number;
 }
