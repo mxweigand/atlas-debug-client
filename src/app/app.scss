@@ -246,6 +246,67 @@
 .delta-active .delta-text { color: var(--accent); font-weight: 600; }
 .delta-active .delta-offset { color: var(--accent); }
 
+.delta-deixis {
+  border-color: var(--type-tool-call);
+  background: rgba(201, 165, 58, 0.12);
+}
+.delta-deixis .delta-text { color: var(--type-tool-call); font-weight: 600; }
+
+.delta-deixis-unresolved {
+  border-color: var(--danger);
+  background: rgba(224, 85, 85, 0.12);
+}
+.delta-deixis-unresolved .delta-text { color: var(--danger); }
+
+.delta-focus-badge {
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 2px;
+  font-size: 9px;
+  background: var(--type-tool-call);
+  color: #111;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.delta-deixis-unresolved .delta-focus-badge {
+  background: var(--danger);
+  color: #111;
+}
+
+/* ── Focus emulator grid ─────────────────────────────────── */
+
+.focus-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.focus-tile {
+  padding: 10px 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.focus-tile:hover,
+.focus-tile-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 207, 168, 0.12);
+}
+
+/* focus_update rows in the log dim to indicate they are noisy background */
+.entry-type-focus-update {
+  opacity: 0.55;
+}
+.entry-type-focus-update .entry-type { color: var(--text-muted); }
+
 .entry-type-speech-started  .entry-type,
 .entry-type-speech-ended    .entry-type { color: var(--type-speech); }
 .entry-type-response-started .entry-type,

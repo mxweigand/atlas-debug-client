@@ -58,6 +58,30 @@
         </button>
       </section>
 
+      <section class="panel">
+        <h2 class="panel-title">Focus Emulator</h2>
+        @if (!weOwnLens()) {
+          <div class="lens-warning">Take /lens to emulate focus</div>
+          @if (!hololensOnLens()) {
+            <button class="btn btn-primary" (click)="toggleLens()">Take /lens</button>
+          }
+        } @else {
+          <div class="focus-grid" (mouseleave)="clearFocus()">
+            @for (id of focusObjects; track id) {
+              <button class="focus-tile"
+                      [class.focus-tile-active]="focus.current() === id"
+                      (mouseenter)="hoverFocus(id)"
+                      (focus)="hoverFocus(id)">
+                {{ id }}
+              </button>
+            }
+          </div>
+          <div class="topology-line">
+            focus: <strong>{{ focus.current() ?? 'none' }}</strong>
+          </div>
+        }
+      </section>
+
     </aside>
 
     <main class="log-panel">
@@ -92,9 +116,14 @@
                 @for (d of entry.deltas; track $index; let i = $index) {
                   <span class="delta"
                         [class.delta-active]="playback.activeDeltaIndex(entry) === i"
-                        [class.delta-passed]="playback.activeDeltaIndex(entry) > i">
+                        [class.delta-passed]="playback.activeDeltaIndex(entry) > i"
+                        [class.delta-deixis]="entry.deixisMarks?.has(i)"
+                        [class.delta-deixis-unresolved]="entry.deixisMarks?.has(i) && entry.deixisMarks?.get(i) === null">
                     <span class="delta-offset">+{{ d.audioOffsetMs }}ms</span>
                     <span class="delta-text">{{ d.delta }}</span>
+                    @if (entry.deixisMarks?.has(i)) {
+                      <span class="delta-focus-badge">{{ entry.deixisMarks?.get(i) ?? 'unresolved' }}</span>
+                    }
                   </span>
                 }
               </div>

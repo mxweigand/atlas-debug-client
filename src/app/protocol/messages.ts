@@ -105,6 +105,17 @@ export interface ModeChangedMessage {
   monitorClients: number;
 }
 
+/**
+ * Rebroadcast of a focus_update the server received on /lens. Sent to
+ * /monitor clients so a debug view can render the pointing stream live.
+ * Payload is identical to the client-side FocusUpdateMessage.
+ */
+export interface FocusUpdateBroadcastMessage {
+  type: 'focus_update';
+  wallclockMs: number;
+  focusId: string | null;
+}
+
 export type ServerMessage =
   | SpeechStartedMessage
   | SpeechEndedMessage
@@ -118,7 +129,8 @@ export type ServerMessage =
   | AssistantTranscriptMessage
   | UserSpeechMessage
   | UserTranscriptDeltaMessage
-  | AssistantSpeechMessage;
+  | AssistantSpeechMessage
+  | FocusUpdateBroadcastMessage;
 
 // ─── Client -> Server ─────────────────────────────────────────────────────────
 
@@ -132,4 +144,18 @@ export interface HelloMessage {
   role: 'hololens' | 'debug';
 }
 
-export type ClientMessage = HelloMessage;
+/**
+ * Continuous pointing/focus stream from the lens client. Emitted on change
+ * plus a low-rate heartbeat so the server always knows whether the pointer is
+ * still on the same target. `focusId` is null when the user is not pointing
+ * at any known object. `wallclockMs` is the client's Date.now() at capture
+ * — the server aligns it against transcript delta timestamps to resolve
+ * deictic references.
+ */
+export interface FocusUpdateMessage {
+  type: 'focus_update';
+  wallclockMs: number;
+  focusId: string | null;
+}
+
+export type ClientMessage = HelloMessage | FocusUpdateMessage;

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { ServerMessage, HelloMessage } from '../protocol/messages';
+import { ClientMessage, ServerMessage, HelloMessage } from '../protocol/messages';
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'rejected';
 
@@ -61,5 +61,16 @@ export class LensService {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(pcm16);
     }
+  }
+
+  /** Send a JSON text frame on the lens socket. No-op when disconnected. */
+  sendMessage(msg: ClientMessage): void {
+    if (this.ws?.readyState !== WebSocket.OPEN) return;
+    this.ws.send(JSON.stringify(msg));
+  }
+
+  /** True when the lens socket is currently open. */
+  get isConnected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
   }
 }

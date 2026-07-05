@@ -7,6 +7,9 @@ import { MonitorService } from './services/monitor.service';
 import { AudioService } from './services/audio.service';
 import { LogService, LogEntry } from './services/log.service';
 import { PlaybackService } from './services/playback.service';
+import { FocusService } from './services/focus.service';
+
+const FOCUS_OBJECT_IDS = ['obj-1', 'obj-2', 'obj-3', 'obj-4', 'obj-5'];
 
 @Component({
   selector: 'app-root',
@@ -20,8 +23,10 @@ export class App implements OnInit, OnDestroy {
   protected audio = inject(AudioService);
   protected logStore = inject(LogService);
   protected playback = inject(PlaybackService);
+  protected focus = inject(FocusService);
 
   protected serverHost = 'ws://localhost:8080';
+  protected readonly focusObjects = FOCUS_OBJECT_IDS;
 
   protected lensState = toSignal(this.lens.state$, { initialValue: 'disconnected' as const });
   protected monitorState = toSignal(this.monitor.state$, { initialValue: 'disconnected' as const });
@@ -94,4 +99,7 @@ export class App implements OnInit, OnDestroy {
     if (this.playback.playingEntryId() === entry.id) this.playback.stop();
     else this.playback.play(entry);
   }
+
+  hoverFocus(id: string): void { this.focus.setFocus(id); }
+  clearFocus(): void { this.focus.setFocus(null); }
 }
