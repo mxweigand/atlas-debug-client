@@ -1,0 +1,293 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.header-state {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.header-state.connecting { color: var(--connecting); border-color: var(--connecting); }
+.header-state.connected  { color: var(--accent);     border-color: var(--accent); }
+.header-state.rejected   { color: var(--danger);     border-color: var(--danger); }
+
+/* ── Panels ──────────────────────────────────────────────── */
+
+.panels {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.panel-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Inputs & Buttons ────────────────────────────────────── */
+
+.url-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.url-input:focus { border-color: var(--accent); }
+.url-input:disabled { opacity: 0.4; }
+
+.btn {
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover:not(:disabled) { background: #2a2a2a; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn.btn-primary { border-color: var(--accent); color: var(--accent); }
+.btn.btn-danger  { border-color: var(--danger); color: var(--danger); }
+.btn.btn-ghost   { padding: 3px 10px; width: auto; font-size: 11px; }
+
+/* ── Status row ──────────────────────────────────────────── */
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.dot.active { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+
+/* ── Topology banner ─────────────────────────────────────── */
+
+.topology-line {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.topology-line strong { color: var(--text); font-weight: 600; }
+
+.lens-warning {
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--connecting);
+  color: var(--connecting);
+  text-align: center;
+}
+
+/* ── Log panel ───────────────────────────────────────────── */
+
+.log-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.log {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0.25rem 0;
+}
+
+.log-empty {
+  padding: 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.log-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 3px 1rem;
+  line-height: 1.6;
+}
+
+.log-entry:hover { background: #1e1e1e; }
+
+.log-entry-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+/* ── Transcription deltas per user_speech row ─────────────── */
+
+.deltas {
+  margin-left: calc(11px /* time */ + 26px /* play btn */ + 140px /* type col */ + 2.25rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--border);
+  font-size: 11px;
+}
+
+.deltas-label {
+  width: 100%;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.delta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.delta-offset {
+  color: var(--text-muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-text {
+  color: var(--text);
+}
+
+.delta-passed {
+  opacity: 0.45;
+}
+
+.delta-active {
+  background: rgba(0, 207, 168, 0.18);
+  border-color: var(--accent);
+}
+
+.delta-active .delta-text { color: var(--accent); font-weight: 600; }
+.delta-active .delta-offset { color: var(--accent); }
+
+.entry-type-speech-started  .entry-type,
+.entry-type-speech-ended    .entry-type { color: var(--type-speech); }
+.entry-type-response-started .entry-type,
+.entry-type-response-done   .entry-type { color: var(--type-response); }
+.entry-type-tool-call        .entry-type { color: var(--type-tool-call); }
+.entry-type-tool-result      .entry-type { color: var(--type-tool-result); }
+.entry-type-error            .entry-type { color: var(--type-error); }
+.entry-type-mode-changed     .entry-type { color: var(--text-muted); }
+.entry-type-user-speech      .entry-type { color: var(--type-user-speech); }
+.entry-type-assistant-speech .entry-type { color: var(--type-assistant-speech); }
+
+.btn-play {
+  flex-shrink: 0;
+  padding: 0 6px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.btn-play:hover { color: var(--accent); border-color: var(--accent); }
+.btn-play.playing { color: var(--accent); border-color: var(--accent); }
+
+.entry-time {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.entry-type {
+  flex-shrink: 0;
+  font-weight: 600;
+  min-width: 160px;
+}
+
+.entry-detail {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

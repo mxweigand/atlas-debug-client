@@ -1,0 +1,30 @@
+:root {
+  --bg: #111;
+  --bg-panel: #1c1c1c;
+  --bg-input: #252525;
+  --border: #2e2e2e;
+  --text: #d8d8d8;
+  --text-muted: #666;
+  --accent: #00cfa8;
+  --danger: #e05555;
+  --connecting: #e0a840;
+
+  --type-speech: #5b9bd5;
+  --type-response: #4eaa6e;
+  --type-tool-call: #c9a53a;
+  --type-tool-result: #00cfa8;
+  --type-error: #e05555;
+  --type-user-speech: #e09b5b;
+  --type-assistant-speech: #a57de0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  height: 100vh;
+  overflow: hidden;
+}

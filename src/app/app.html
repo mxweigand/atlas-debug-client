@@ -1,0 +1,109 @@
+<div class="layout">
+  <header class="header">
+    <span class="header-title">ATLAS Debug Client</span>
+    <span class="header-state"
+          [class.connected]="monitorState() === 'connected'"
+          [class.connecting]="monitorState() === 'connecting'">
+      monitor: {{ monitorState() }}
+    </span>
+    <span class="header-state"
+          [class.connected]="lensState() === 'connected'"
+          [class.connecting]="lensState() === 'connecting'"
+          [class.rejected]="lensState() === 'rejected'">
+      lens: {{ lensState() }}
+    </span>
+  </header>
+
+  <div class="panels">
+    <aside class="sidebar">
+
+      <section class="panel">
+        <h2 class="panel-title">Connection</h2>
+        <input
+          class="url-input"
+          [(ngModel)]="serverHost"
+          [disabled]="monitorState() !== 'disconnected'"
+          placeholder="ws://localhost:8080"
+        />
+        <div class="topology-line">
+          lens: <strong>{{ mode().lensClient ?? 'free' }}</strong><br />
+          monitors: <strong>{{ mode().monitorClients }}</strong>
+        </div>
+        @if (monitorState() === 'disconnected') {
+          <button class="btn btn-primary" (click)="reconnectMonitor()">Reconnect monitor</button>
+        }
+        @if (hololensOnLens()) {
+          <div class="lens-warning">HoloLens holds /lens — mic disabled</div>
+        } @else if (weOwnLens()) {
+          <button class="btn btn-danger" (click)="toggleLens()">Release /lens</button>
+        } @else if (lensState() === 'rejected') {
+          <div class="lens-warning">/lens slot occupied</div>
+        }
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">Audio</h2>
+        <div class="status-row">
+          <span class="dot" [class.active]="micActive()"></span>
+          <span>Mic: {{ micActive() ? 'active' : 'off' }}</span>
+        </div>
+        <button
+          class="btn"
+          [class.btn-danger]="micActive()"
+          [class.btn-primary]="!micActive()"
+          [disabled]="hololensOnLens()"
+          (click)="toggleMic()"
+        >
+          {{ micActive() ? 'Stop Mic' : 'Start Mic' }}
+        </button>
+      </section>
+
+    </aside>
+
+    <main class="log-panel">
+      <div class="log-header">
+        <h2 class="panel-title">Event Log</h2>
+        <button class="btn btn-ghost" (click)="clearLog()">Clear</button>
+      </div>
+      <ul class="log">
+        @for (entry of log(); track entry.id) {
+          <li class="log-entry" [class]="'entry-type-' + entry.type.replaceAll('_', '-')">
+            <div class="log-entry-main">
+              <span class="entry-time">{{ entry.time }}</span>
+              @if (entry.type === 'user_speech' && entry.audio) {
+                <button class="btn-play"
+                        [class.playing]="playingEntryId() === entry.id"
+                        (click)="playingEntryId() === entry.id ? stopPlayback() : playUserSpeech(entry)"
+                        title="Play / stop audio">
+                  {{ playingEntryId() === entry.id ? '■' : '▶' }}
+                </button>
+              } @else if (entry.audio) {
+                <button class="btn-play" (click)="playAudio(entry.audio)" title="Play audio">▶</button>
+              }
+              <span class="entry-type">{{ entry.type }}</span>
+              @if (entry.detail) {
+                <span class="entry-detail">{{ entry.detail }}</span>
+              }
+            </div>
+
+            @if (entry.type === 'user_speech' && entry.deltas && entry.deltas.length > 0) {
+              <div class="deltas">
+                <span class="deltas-label">Transcription latency (received vs audio):</span>
+                @for (d of entry.deltas; track $index; let i = $index) {
+                  <span class="delta"
+                        [class.delta-active]="activeDeltaIndex(entry) === i"
+                        [class.delta-passed]="activeDeltaIndex(entry) > i">
+                    <span class="delta-offset">+{{ d.audioOffsetMs }}ms</span>
+                    <span class="delta-text">{{ d.delta }}</span>
+                  </span>
+                }
+              </div>
+            }
+          </li>
+        } @empty {
+          <li class="log-empty">No events yet — waiting for /monitor connection.</li>
+        }
+      </ul>
+    </main>
+  </div>
+</div>
