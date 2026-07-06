@@ -1,5 +1,35 @@
 // Wire protocol between atlas-server and its clients (HoloLens + debug client).
-// This file is the master. Clients have to follow it exactly. Possibly by keeping a copy of it if they implement it directly in TypeScript. 
+// This file is the master. Clients have to follow it exactly. Possibly by keeping a copy of it if they implement it directly in TypeScript.
+
+// ─── Project / object shapes (shared data model) ──────────────────────────────
+
+/**
+ * A single addressable object inside a project. `id` doubles as the focusId
+ * emitted on /lens — the same value the deixis resolver returns. `summary` is
+ * short, injected verbatim into the system prompt at session start. `content`
+ * is the full description, retrieved on demand via the describe_object tool.
+ * `geometry` is opaque JSON reserved for future use (position, mesh, …).
+ *
+ * The parent project is not stored on the object — it's implicit from where
+ * the object lives (either its JSON file or the active project).
+ */
+export interface AtlasObject {
+  id: string;
+  name: string;
+  summary: string;
+  content: string;
+  geometry: unknown;
+}
+
+/**
+ * A named collection of objects. `summary` is an optional project-level intro
+ * also injected into the system prompt at session start.
+ */
+export interface AtlasProject {
+  id: string;
+  name: string;
+  summary?: string;
+}
 
 // ─── Server -> Client (broadcast on /lens and /monitor as appropriate) ────────
 
@@ -116,6 +146,28 @@ export interface FocusUpdateBroadcastMessage {
   focusId: string | null;
 }
 
+/**
+ * Broadcast whenever the active project changes (activation, deactivation).
+ * Sent to /monitor and /lens so both stay in sync with the server state.
+ * `projectId` is null while the server is idle (no project loaded).
+ */
+export interface ProjectActivatedMessage {
+  type: 'project_activated';
+  projectId: string | null;
+}
+
+/**
+ * Broadcast whenever an object's mutable fields (name, summary, content) have
+ * been patched — either through the update_object tool or a REST PATCH. The
+ * parent project is carried alongside since the object itself no longer
+ * stores it.
+ */
+export interface ObjectUpdatedMessage {
+  type: 'object_updated';
+  projectId: string;
+  object: AtlasObject;
+}
+
 export type ServerMessage =
   | SpeechStartedMessage
   | SpeechEndedMessage
@@ -130,7 +182,9 @@ export type ServerMessage =
   | UserSpeechMessage
   | UserTranscriptDeltaMessage
   | AssistantSpeechMessage
-  | FocusUpdateBroadcastMessage;
+  | FocusUpdateBroadcastMessage
+  | ProjectActivatedMessage
+  | ObjectUpdatedMessage;
 
 // ─── Client -> Server ─────────────────────────────────────────────────────────
 

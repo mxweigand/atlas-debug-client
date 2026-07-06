@@ -12,6 +12,9 @@
           [class.rejected]="lensState() === 'rejected'">
       lens: {{ lensState() }}
     </span>
+    <span class="header-state" [class.connected]="activeProject() !== null">
+      project: {{ activeProject()?.project?.id ?? 'idle' }}
+    </span>
   </header>
 
   <div class="panels">
@@ -56,30 +59,6 @@
         >
           {{ micActive() ? 'Stop Mic' : 'Start Mic' }}
         </button>
-      </section>
-
-      <section class="panel">
-        <h2 class="panel-title">Focus Emulator</h2>
-        @if (!weOwnLens()) {
-          <div class="lens-warning">Take /lens to emulate focus</div>
-          @if (!hololensOnLens()) {
-            <button class="btn btn-primary" (click)="toggleLens()">Take /lens</button>
-          }
-        } @else {
-          <div class="focus-grid" (mouseleave)="clearFocus()">
-            @for (id of focusObjects; track id) {
-              <button class="focus-tile"
-                      [class.focus-tile-active]="focus.current() === id"
-                      (mouseenter)="hoverFocus(id)"
-                      (focus)="hoverFocus(id)">
-                {{ id }}
-              </button>
-            }
-          </div>
-          <div class="topology-line">
-            focus: <strong>{{ focus.current() ?? 'none' }}</strong>
-          </div>
-        }
       </section>
 
     </aside>
@@ -152,5 +131,61 @@
         }
       </ul>
     </main>
+
+    <aside class="project-panel">
+      @if (activeProject(); as detail) {
+        <div class="project-header">
+          <button class="btn btn-ghost" (click)="deactivateProject()">← Projects</button>
+          <span class="project-name">{{ detail.project.name }}</span>
+        </div>
+        @if (detail.project.summary) {
+          <p class="project-summary">{{ detail.project.summary }}</p>
+        }
+        <h3 class="panel-title">Objects</h3>
+        @if (!weOwnLens()) {
+          <div class="lens-warning">Take /lens to emulate focus</div>
+          @if (!hololensOnLens()) {
+            <button class="btn btn-primary" (click)="toggleLens()">Take /lens</button>
+          }
+        }
+        <ul class="object-list" (mouseleave)="clearFocus()">
+          @for (obj of detail.objects; track obj.id) {
+            <li class="object-entry"
+                [class.object-entry-active]="focus.current() === obj.id"
+                (mouseenter)="hoverFocus(obj.id)">
+              <div class="object-row">
+                <button class="btn-toggle-json"
+                        (click)="toggleObjectExpanded(obj.id)"
+                        [title]="isObjectExpanded(obj.id) ? 'Collapse' : 'Expand'">
+                  {{ isObjectExpanded(obj.id) ? '−' : '+' }}
+                </button>
+                <span class="object-id">{{ obj.id }}</span>
+                <span class="object-name">{{ obj.name }}</span>
+              </div>
+              @if (isObjectExpanded(obj.id)) {
+                <pre class="object-json">{{ objectAsJson(obj) }}</pre>
+              }
+            </li>
+          } @empty {
+            <li class="log-empty">No objects in this project.</li>
+          }
+        </ul>
+      } @else {
+        <div class="project-header">
+          <span class="project-name">Projects</span>
+          <button class="btn btn-ghost" (click)="refreshProjects()">Refresh</button>
+        </div>
+        <ul class="project-list">
+          @for (p of projects(); track p.id) {
+            <li class="project-list-item" (click)="activateProject(p.id)">
+              <span class="object-id">{{ p.id }}</span>
+              <span class="object-name">{{ p.name }}</span>
+            </li>
+          } @empty {
+            <li class="log-empty">No projects on disk. Drop a JSON into data/projects/.</li>
+          }
+        </ul>
+      }
+    </aside>
   </div>
 </div>

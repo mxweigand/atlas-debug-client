@@ -8,8 +8,8 @@ import { AudioService } from './services/audio.service';
 import { LogService, LogEntry } from './services/log.service';
 import { PlaybackService } from './services/playback.service';
 import { FocusService } from './services/focus.service';
-
-const FOCUS_OBJECT_IDS = ['obj-1', 'obj-2', 'obj-3', 'obj-4', 'obj-5'];
+import { ProjectsService } from './services/projects.service';
+import { AtlasObject } from './protocol/messages';
 
 @Component({
   selector: 'app-root',
@@ -24,9 +24,10 @@ export class App implements OnInit, OnDestroy {
   protected logStore = inject(LogService);
   protected playback = inject(PlaybackService);
   protected focus = inject(FocusService);
+  protected projectsService = inject(ProjectsService);
 
   protected serverHost = 'ws://localhost:8080';
-  protected readonly focusObjects = FOCUS_OBJECT_IDS;
+  protected restBase = 'http://localhost:3000';
 
   protected lensState = toSignal(this.lens.state$, { initialValue: 'disconnected' as const });
   protected monitorState = toSignal(this.monitor.state$, { initialValue: 'disconnected' as const });
@@ -40,12 +41,32 @@ export class App implements OnInit, OnDestroy {
   /** True when a real HoloLens holds the /lens slot. */
   protected hololensOnLens = computed(() => this.mode().lensClient === 'hololens');
 
+  protected projects = computed(() => this.projectsService.projects());
+  protected activeProject = computed(() => this.projectsService.active());
+
+  /** Objects the sidebar-less focus panel can render. Empty when no project active. */
+  protected activeObjects = computed(() => this.projectsService.active()?.objects ?? []);
+
+  /** Entries whose object body is expanded in the right panel. */
+  private expandedObjectIds = signal<Set<string>>(new Set());
+
   private subs: Subscription[] = [];
 
   ngOnInit(): void {
+    this.projectsService.setRestBase(this.restBase);
     this.subs.push(
       // /monitor events feed the log store.
       this.monitor.events$.subscribe(msg => this.logStore.append(msg)),
+      // /monitor also carries the project/object state stream — reload details
+      // on activation, patch in place on object updates.
+      this.monitor.events$.subscribe(msg => {
+        if (msg.type === 'project_activated') {
+          if (msg.projectId) void this.projectsService.reloadActive(msg.projectId);
+          else this.projectsService.active.set(null);
+        } else if (msg.type === 'object_updated') {
+          this.projectsService.applyObjectUpdate(msg.projectId, msg.object);
+        }
+      }),
       // Assistant audio only ever arrives on /lens.
       this.lens.incomingAudio$.subscribe(buf => this.audio.playPcm16(buf)),
       // Mic chunks go into the lens socket (only effective while we hold the slot).
@@ -53,6 +74,9 @@ export class App implements OnInit, OnDestroy {
     );
     // Auto-connect /monitor — read-only, safe to keep open alongside a HoloLens.
     this.monitor.connect(`${this.serverHost}/monitor`);
+    // Pull the project list right away so the right panel is populated even
+    // before any monitor event arrives.
+    void this.projectsService.refreshList();
   }
 
   ngOnDestroy(): void {
@@ -102,6 +126,37 @@ export class App implements OnInit, OnDestroy {
 
   hoverFocus(id: string): void { this.focus.setFocus(id); }
   clearFocus(): void { this.focus.setFocus(null); }
+
+  async activateProject(id: string): Promise<void> {
+    await this.projectsService.activate(id);
+  }
+
+  async deactivateProject(): Promise<void> {
+    await this.projectsService.deactivate();
+  }
+
+  async refreshProjects(): Promise<void> {
+    await this.projectsService.refreshList();
+  }
+
+  isObjectExpanded(id: string): boolean {
+    return this.expandedObjectIds().has(id);
+  }
+
+  toggleObjectExpanded(id: string): void {
+    const next = new Set(this.expandedObjectIds());
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    this.expandedObjectIds.set(next);
+  }
+
+  objectAsJson(obj: AtlasObject): string {
+    return JSON.stringify(
+      { name: obj.name, summary: obj.summary, content: obj.content, geometry: obj.geometry },
+      null,
+      2,
+    );
+  }
 
   /**
    * Entries whose JSON block is currently collapsed. Default is expanded, so
