@@ -25,9 +25,11 @@
 
   <div class="panels">
     <aside class="sidebar">
-
-      <section class="panel">
-        <h2 class="panel-title">HoloLens</h2>
+      <div class="column-header">
+        <h2 class="panel-title">HoloLens Emulator</h2>
+      </div>
+      <div class="column-content">
+        <h3 class="panel-title">Emulator</h3>
         @if (realHololensConnected()) {
           <div class="hololens-warning">HoloLens holds /hololens — mic disabled</div>
         } @else if (weOwnHololens()) {
@@ -38,10 +40,8 @@
           <div class="hololens-warning">Take /hololens to emulate focus</div>
           <button class="btn btn-primary" (click)="toggleHololens()">Take /hololens</button>
         }
-      </section>
 
-      <section class="panel">
-        <h2 class="panel-title">Audio</h2>
+        <h3 class="panel-title">Audio</h3>
         <div class="status-row">
           <span class="dot" [class.active]="micActive()"></span>
           <span>Mic: {{ micActive() ? 'active' : 'off' }}</span>
@@ -55,12 +55,11 @@
         >
           {{ micActive() ? 'Stop Mic' : 'Start Mic' }}
         </button>
-      </section>
-
+      </div>
     </aside>
 
     <main class="log-panel">
-      <div class="log-header">
+      <div class="column-header">
         <h2 class="panel-title">Event Log</h2>
         <button class="btn btn-ghost" (click)="clearLog()">Clear</button>
       </div>
@@ -130,60 +129,64 @@
 
     <aside class="project-panel">
       @if (activeProject(); as detail) {
-        <div class="project-header">
+        <div class="column-header">
+          <h2 class="panel-title">Project</h2>
           <button class="btn btn-ghost" (click)="deactivateProject()">← Projects</button>
         </div>
+        <div class="column-content">
+          <h3 class="panel-title">Title</h3>
+          <p class="project-field">{{ detail.project.name }}</p>
 
-        <h3 class="panel-title">Title</h3>
-        <p class="project-field">{{ detail.project.name }}</p>
-
-        @if (detail.project.summary) {
-          <h3 class="panel-title">Description</h3>
-          <p class="project-field">{{ detail.project.summary }}</p>
-        }
-
-        <h3 class="panel-title">Objects</h3>
-        <ul class="object-list" (mouseleave)="clearFocus()">
-          @for (obj of detail.objects; track obj.id) {
-            <li class="object-entry"
-                [class.object-entry-active]="focus.current() === obj.id"
-                (mouseenter)="hoverFocus(obj.id)">
-              <div class="object-row">
-                <button class="btn-toggle-json"
-                        (click)="toggleObjectExpanded(obj.id)"
-                        [title]="isObjectExpanded(obj.id) ? 'Collapse' : 'Expand'">
-                  {{ isObjectExpanded(obj.id) ? '−' : '+' }}
-                </button>
-                <span class="object-id">{{ obj.id }}</span>
-                <span class="object-name">{{ obj.name }}</span>
-              </div>
-              @if (isObjectExpanded(obj.id)) {
-                <div class="object-json">
-                  @for (line of objectAsJsonLines(obj); track $index) {
-                    <div class="object-json-line">{{ line }}</div>
-                  }
-                </div>
-              }
-            </li>
-          } @empty {
-            <li class="log-empty">No objects in this project.</li>
+          @if (detail.project.summary) {
+            <h3 class="panel-title">Description</h3>
+            <p class="project-field">{{ detail.project.summary }}</p>
           }
-        </ul>
+
+          <h3 class="panel-title">Objects</h3>
+          <ul class="object-list" (mouseleave)="clearFocus()">
+            @for (obj of detail.objects; track obj.id) {
+              <li class="object-entry"
+                  [class.object-entry-active]="focus.current() === obj.id"
+                  (mouseenter)="hoverFocus(obj.id)">
+                <div class="object-row">
+                  <button class="btn-toggle-json"
+                          (click)="toggleObjectExpanded(obj.id)"
+                          [title]="isObjectExpanded(obj.id) ? 'Collapse' : 'Expand'">
+                    {{ isObjectExpanded(obj.id) ? '−' : '+' }}
+                  </button>
+                  <span class="object-id">{{ obj.id }}</span>
+                  <span class="object-name">{{ obj.name }}</span>
+                </div>
+                @if (isObjectExpanded(obj.id)) {
+                  <div class="object-json">
+                    @for (line of objectAsJsonLines(obj); track $index) {
+                      <div class="object-json-line">{{ line }}</div>
+                    }
+                  </div>
+                }
+              </li>
+            } @empty {
+              <li class="log-empty">No objects in this project.</li>
+            }
+          </ul>
+        </div>
       } @else {
-        <div class="project-header">
+        <div class="column-header">
           <h2 class="panel-title">Projects</h2>
           <button class="btn btn-ghost" (click)="refreshProjects()">Refresh</button>
         </div>
-        <ul class="project-list">
-          @for (p of projects(); track p.id) {
-            <li class="project-list-item" (click)="activateProject(p.id)">
-              <span class="object-id">{{ p.id }}</span>
-              <span class="object-name">{{ p.name }}</span>
-            </li>
-          } @empty {
-            <li class="log-empty">No projects on disk. Drop a JSON into data/projects/.</li>
-          }
-        </ul>
+        <div class="column-content">
+          <ul class="project-list">
+            @for (p of projects(); track p.id) {
+              <li class="project-list-item" (click)="activateProject(p.id)">
+                <span class="object-id">{{ p.id }}</span>
+                <span class="object-name">{{ p.name }}</span>
+              </li>
+            } @empty {
+              <li class="log-empty">No projects on disk. Drop a JSON into data/projects/.</li>
+            }
+          </ul>
+        </div>
       }
     </aside>
   </div>
