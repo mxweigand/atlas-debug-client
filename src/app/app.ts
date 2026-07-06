@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
-import { LensService } from './services/lens.service';
+import { HololensService } from './services/hololens.service';
 import { MonitorService } from './services/monitor.service';
 import { AudioService } from './services/audio.service';
 import { LogService, LogEntry } from './services/log.service';
@@ -17,7 +17,7 @@ import { AtlasObject } from './protocol/messages';
   styleUrl: './app.scss',
 })
 export class App implements OnInit, OnDestroy {
-  protected lens = inject(LensService);
+  protected hololens = inject(HololensService);
   protected monitor = inject(MonitorService);
   protected audio = inject(AudioService);
   protected logStore = inject(LogService);
@@ -30,22 +30,22 @@ export class App implements OnInit, OnDestroy {
   private readonly serverHost = 'ws://localhost:8080';
   private readonly restBase = 'http://localhost:3000';
 
-  protected lensState = toSignal(this.lens.state$, { initialValue: 'disconnected' as const });
+  protected hololensState = toSignal(this.hololens.state$, { initialValue: 'disconnected' as const });
   protected monitorState = toSignal(this.monitor.state$, { initialValue: 'disconnected' as const });
   protected micActive = toSignal(this.audio.micActive$, { initialValue: false });
   protected mode = toSignal(this.monitor.mode$, {
     initialValue: this.monitor.mode$.getValue(),
   });
 
-  /** True when this debug client currently holds the /lens slot. */
-  protected weOwnLens = computed(() => this.lensState() === 'connected');
-  /** True when a real HoloLens holds the /lens slot. */
-  protected hololensOnLens = computed(() => this.mode().lensClient === 'hololens');
+  /** True when this debug client currently holds the /hololens slot. */
+  protected weOwnHololens = computed(() => this.hololensState() === 'connected');
+  /** True when a real HoloLens (not the debug emulator) holds the /hololens slot. */
+  protected realHololensConnected = computed(() => this.mode().hololensClient === 'hololens');
 
   protected projects = computed(() => this.projectsService.projects());
   protected activeProject = computed(() => this.projectsService.active());
 
-  /** Objects the sidebar-less focus panel can render. Empty when no project active. */
+  /** Objects the focus panel renders. Empty when no project active. */
   protected activeObjects = computed(() => this.projectsService.active()?.objects ?? []);
 
   /** Entries whose object body is expanded in the right panel. */
@@ -68,12 +68,12 @@ export class App implements OnInit, OnDestroy {
           this.projectsService.applyObjectUpdate(msg.projectId, msg.object);
         }
       }),
-      // Assistant audio only ever arrives on /lens.
-      this.lens.incomingAudio$.subscribe(buf => this.audio.playPcm16(buf)),
-      // Mic chunks go into the lens socket (only effective while we hold the slot).
-      this.audio.pcmChunk$.subscribe(buf => this.lens.sendAudio(buf)),
+      // Assistant audio only ever arrives on /hololens.
+      this.hololens.incomingAudio$.subscribe(buf => this.audio.playPcm16(buf)),
+      // Mic chunks go into the /hololens socket (only effective while we hold the slot).
+      this.audio.pcmChunk$.subscribe(buf => this.hololens.sendAudio(buf)),
     );
-    // Auto-connect /monitor — read-only, safe to keep open alongside a HoloLens.
+    // Auto-connect /monitor — read-only, safe to keep open alongside a real HoloLens.
     this.monitor.connect(`${this.serverHost}/monitor`);
     // Pull the project list right away so the right panel is populated even
     // before any monitor event arrives.
@@ -83,15 +83,15 @@ export class App implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subs.forEach(s => s.unsubscribe());
     this.playback.stop();
-    this.lens.disconnect();
+    this.hololens.disconnect();
     this.monitor.disconnect();
   }
 
-  toggleLens(): void {
-    if (this.lensState() === 'connected') {
-      this.lens.disconnect();
+  toggleHololens(): void {
+    if (this.hololensState() === 'connected') {
+      this.hololens.disconnect();
     } else {
-      this.lens.connect(`${this.serverHost}/lens`);
+      this.hololens.connect(`${this.serverHost}/hololens`);
     }
   }
 
@@ -102,11 +102,11 @@ export class App implements OnInit, OnDestroy {
       this.audio.stopMic();
       return;
     }
-    // No /lens slot, no mic — otherwise the audio would go nowhere.
-    if (!this.weOwnLens()) {
-      this.lens.connect(`${this.serverHost}/lens`);
+    // No /hololens slot, no mic — otherwise the audio would go nowhere.
+    if (!this.weOwnHololens()) {
+      this.hololens.connect(`${this.serverHost}/hololens`);
       await new Promise(r => setTimeout(r, 300));
-      if (this.lensState() !== 'connected') return;
+      if (this.hololensState() !== 'connected') return;
     }
     await this.audio.startMic();
   }

@@ -127,7 +127,7 @@ export class LogService {
       case 'mode_changed':
         this.pushEntry({
           type: 'mode_changed',
-          detail: `lens: ${msg.lensClient ?? 'free'}  monitors: ${msg.monitorClients}`,
+          detail: `hololens: ${msg.hololensClient ?? 'free'}  monitors: ${msg.monitorClients}`,
         });
         return;
       case 'focus_update':

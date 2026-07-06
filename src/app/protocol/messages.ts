@@ -5,7 +5,7 @@
 
 /**
  * A single addressable object inside a project. `id` doubles as the focusId
- * emitted on /lens — the same value the deixis resolver returns. `summary` is
+ * emitted on /hololens — the same value the deixis resolver returns. `summary` is
  * short, injected verbatim into the system prompt at session start. `content`
  * is the full description, retrieved on demand via the describe_object tool.
  * `geometry` is opaque JSON reserved for future use (position, mesh, …).
@@ -31,7 +31,7 @@ export interface AtlasProject {
   summary?: string;
 }
 
-// ─── Server -> Client (broadcast on /lens and /monitor as appropriate) ────────
+// ─── Server -> Client (broadcast on /hololens and /monitor as appropriate) ───
 
 /** Emitted when OpenAI VAD detects the user has started speaking. */
 export interface SpeechStartedMessage {
@@ -124,19 +124,19 @@ export interface UserTranscriptDeltaMessage {
 }
 
 /**
- * Current connection topology. Broadcast to /monitor whenever the /lens slot
- * or the /monitor client set changes. `lensClient` is 'hololens' when the
- * lens slot is occupied by a real HoloLens (path /lens with role hint),
- * 'debug' when it's the debug client emulating, and null when free.
+ * Current connection topology. Broadcast to /monitor whenever the /hololens
+ * slot or the /monitor client set changes. `hololensClient` is 'hololens'
+ * when the slot is occupied by a real HoloLens (path /hololens with role
+ * hint), 'debug' when it's the debug client emulating, and null when free.
  */
 export interface ModeChangedMessage {
   type: 'mode_changed';
-  lensClient: 'hololens' | 'debug' | null;
+  hololensClient: 'hololens' | 'debug' | null;
   monitorClients: number;
 }
 
 /**
- * Rebroadcast of a focus_update the server received on /lens. Sent to
+ * Rebroadcast of a focus_update the server received on /hololens. Sent to
  * /monitor clients so a debug view can render the pointing stream live.
  * Payload is identical to the client-side FocusUpdateMessage.
  */
@@ -148,7 +148,7 @@ export interface FocusUpdateBroadcastMessage {
 
 /**
  * Broadcast whenever the active project changes (activation, deactivation).
- * Sent to /monitor and /lens so both stay in sync with the server state.
+ * Sent to /monitor and /hololens so both stay in sync with the server state.
  * `projectId` is null while the server is idle (no project loaded).
  */
 export interface ProjectActivatedMessage {
@@ -189,7 +189,7 @@ export type ServerMessage =
 // ─── Client -> Server ─────────────────────────────────────────────────────────
 
 /**
- * Sent once by clients connecting to /lens to declare their identity.
+ * Sent once by clients connecting to /hololens to declare their identity.
  * If omitted, the server assumes 'debug'. Purely informational — the server
  * treats both roles identically.
  */
@@ -199,7 +199,7 @@ export interface HelloMessage {
 }
 
 /**
- * Continuous pointing/focus stream from the lens client. Emitted on change
+ * Continuous pointing/focus stream from the /hololens client. Emitted on change
  * plus a low-rate heartbeat so the server always knows whether the pointer is
  * still on the same target. `focusId` is null when the user is not pointing
  * at any known object. `wallclockMs` is the client's Date.now() at capture

@@ -5,13 +5,13 @@ import { ClientMessage, ServerMessage, HelloMessage } from '../protocol/messages
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'rejected';
 
 /**
- * WebSocket connection to the atlas-server on `/lens`. Emulates the HoloLens:
- * pushes microphone PCM out, receives assistant audio and lifecycle events.
- * Only one connection per server instance — if the slot is taken, the server
- * closes the connection with code 1008 and we surface state `rejected`.
+ * WebSocket connection to the atlas-server on `/hololens`. Emulates a real
+ * HoloLens: pushes microphone PCM out, receives assistant audio and lifecycle
+ * events. Only one connection per server instance — if the slot is taken, the
+ * server closes the connection with code 1008 and we surface state `rejected`.
  */
 @Injectable({ providedIn: 'root' })
-export class LensService {
+export class HololensService {
   private ws: WebSocket | null = null;
 
   readonly state$ = new BehaviorSubject<ConnectionState>('disconnected');
@@ -63,13 +63,13 @@ export class LensService {
     }
   }
 
-  /** Send a JSON text frame on the lens socket. No-op when disconnected. */
+  /** Send a JSON text frame on the /hololens socket. No-op when disconnected. */
   sendMessage(msg: ClientMessage): void {
     if (this.ws?.readyState !== WebSocket.OPEN) return;
     this.ws.send(JSON.stringify(msg));
   }
 
-  /** True when the lens socket is currently open. */
+  /** True when the /hololens socket is currently open. */
   get isConnected(): boolean {
     return this.ws?.readyState === WebSocket.OPEN;
   }

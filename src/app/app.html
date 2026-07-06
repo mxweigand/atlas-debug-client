@@ -7,9 +7,9 @@
       monitor: {{ monitorState() === 'connected' ? 'connected' : 'disconnected' }} ({{ mode().monitorClients }})
     </span>
     <span class="header-state"
-          [class.connected]="lensState() === 'connected'"
-          [class.disconnected]="lensState() !== 'connected'">
-      lens: {{ lensState() === 'connected' ? 'connected' : 'disconnected' }}
+          [class.connected]="hololensState() === 'connected'"
+          [class.disconnected]="hololensState() !== 'connected'">
+      hololens: {{ hololensState() === 'connected' ? 'connected' : 'disconnected' }}
     </span>
     <span class="header-state"
           [class.connected]="activeProject() !== null"
@@ -22,16 +22,16 @@
     <aside class="sidebar">
 
       <section class="panel">
-        <h2 class="panel-title">Lens</h2>
-        @if (hololensOnLens()) {
-          <div class="lens-warning">HoloLens holds /lens — mic disabled</div>
-        } @else if (weOwnLens()) {
-          <button class="btn btn-danger" (click)="toggleLens()">Release /lens</button>
-        } @else if (lensState() === 'rejected') {
-          <div class="lens-warning">/lens slot occupied</div>
+        <h2 class="panel-title">HoloLens</h2>
+        @if (realHololensConnected()) {
+          <div class="hololens-warning">HoloLens holds /hololens — mic disabled</div>
+        } @else if (weOwnHololens()) {
+          <button class="btn btn-danger" (click)="toggleHololens()">Release /hololens</button>
+        } @else if (hololensState() === 'rejected') {
+          <div class="hololens-warning">/hololens slot occupied</div>
         } @else {
-          <div class="lens-warning">Take /lens to emulate focus</div>
-          <button class="btn btn-primary" (click)="toggleLens()">Take /lens</button>
+          <div class="hololens-warning">Take /hololens to emulate focus</div>
+          <button class="btn btn-primary" (click)="toggleHololens()">Take /hololens</button>
         }
       </section>
 
@@ -45,7 +45,7 @@
           class="btn"
           [class.btn-danger]="micActive()"
           [class.btn-primary]="!micActive()"
-          [disabled]="hololensOnLens()"
+          [disabled]="realHololensConnected()"
           (click)="toggleMic()"
         >
           {{ micActive() ? 'Stop Mic' : 'Start Mic' }}
@@ -166,7 +166,7 @@
         </ul>
       } @else {
         <div class="project-header">
-          <span class="project-name">Projects</span>
+          <h2 class="panel-title">Projects</h2>
           <button class="btn btn-ghost" (click)="refreshProjects()">Refresh</button>
         </div>
         <ul class="project-list">

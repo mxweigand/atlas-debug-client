@@ -6,7 +6,7 @@ export type ConnectionState = 'disconnected' | 'connecting' | 'connected';
 
 const INITIAL_MODE: ModeChangedMessage = {
   type: 'mode_changed',
-  lensClient: null,
+  hololensClient: null,
   monitorClients: 0,
 };
 
