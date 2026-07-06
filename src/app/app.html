@@ -7,9 +7,14 @@
       monitor: {{ monitorState() === 'connected' ? 'connected' : 'disconnected' }} ({{ mode().monitorClients }})
     </span>
     <span class="header-state"
-          [class.connected]="hololensState() === 'connected'"
-          [class.disconnected]="hololensState() !== 'connected'">
-      hololens: {{ hololensState() === 'connected' ? 'connected' : 'disconnected' }}
+          [class.connected]="mode().hololensClient !== null"
+          [class.disconnected]="mode().hololensClient === null">
+      hololens:
+      @switch (mode().hololensClient) {
+        @case ('hololens') { connected }
+        @case ('debug')    { connected (emulator) }
+        @default           { disconnected }
+      }
     </span>
     <span class="header-state"
           [class.connected]="activeProject() !== null"
