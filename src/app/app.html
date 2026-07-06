@@ -3,17 +3,18 @@
     <span class="header-title">ATLAS Debug Client</span>
     <span class="header-state"
           [class.connected]="monitorState() === 'connected'"
-          [class.connecting]="monitorState() === 'connecting'">
-      monitor: {{ monitorState() }}
+          [class.disconnected]="monitorState() !== 'connected'">
+      monitor: {{ monitorState() === 'connected' ? 'connected' : 'disconnected' }} ({{ mode().monitorClients }})
     </span>
     <span class="header-state"
           [class.connected]="lensState() === 'connected'"
-          [class.connecting]="lensState() === 'connecting'"
-          [class.rejected]="lensState() === 'rejected'">
-      lens: {{ lensState() }}
+          [class.disconnected]="lensState() !== 'connected'">
+      lens: {{ lensState() === 'connected' ? 'connected' : 'disconnected' }}
     </span>
-    <span class="header-state" [class.connected]="activeProject() !== null">
-      project: {{ activeProject()?.project?.id ?? 'idle' }}
+    <span class="header-state"
+          [class.connected]="activeProject() !== null"
+          [class.disconnected]="activeProject() === null">
+      project: {{ activeProject()?.project?.name ?? 'none' }}
     </span>
   </header>
 
@@ -21,26 +22,16 @@
     <aside class="sidebar">
 
       <section class="panel">
-        <h2 class="panel-title">Connection</h2>
-        <input
-          class="url-input"
-          [(ngModel)]="serverHost"
-          [disabled]="monitorState() !== 'disconnected'"
-          placeholder="ws://localhost:8080"
-        />
-        <div class="topology-line">
-          lens: <strong>{{ mode().lensClient ?? 'free' }}</strong><br />
-          monitors: <strong>{{ mode().monitorClients }}</strong>
-        </div>
-        @if (monitorState() === 'disconnected') {
-          <button class="btn btn-primary" (click)="reconnectMonitor()">Reconnect monitor</button>
-        }
+        <h2 class="panel-title">Lens</h2>
         @if (hololensOnLens()) {
           <div class="lens-warning">HoloLens holds /lens — mic disabled</div>
         } @else if (weOwnLens()) {
           <button class="btn btn-danger" (click)="toggleLens()">Release /lens</button>
         } @else if (lensState() === 'rejected') {
           <div class="lens-warning">/lens slot occupied</div>
+        } @else {
+          <div class="lens-warning">Take /lens to emulate focus</div>
+          <button class="btn btn-primary" (click)="toggleLens()">Take /lens</button>
         }
       </section>
 
@@ -136,18 +127,17 @@
       @if (activeProject(); as detail) {
         <div class="project-header">
           <button class="btn btn-ghost" (click)="deactivateProject()">← Projects</button>
-          <span class="project-name">{{ detail.project.name }}</span>
         </div>
+
+        <h3 class="panel-title">Title</h3>
+        <p class="project-field">{{ detail.project.name }}</p>
+
         @if (detail.project.summary) {
-          <p class="project-summary">{{ detail.project.summary }}</p>
+          <h3 class="panel-title">Description</h3>
+          <p class="project-field">{{ detail.project.summary }}</p>
         }
+
         <h3 class="panel-title">Objects</h3>
-        @if (!weOwnLens()) {
-          <div class="lens-warning">Take /lens to emulate focus</div>
-          @if (!hololensOnLens()) {
-            <button class="btn btn-primary" (click)="toggleLens()">Take /lens</button>
-          }
-        }
         <ul class="object-list" (mouseleave)="clearFocus()">
           @for (obj of detail.objects; track obj.id) {
             <li class="object-entry"

@@ -1,5 +1,4 @@
 import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { LensService } from './services/lens.service';
@@ -13,7 +12,7 @@ import { AtlasObject } from './protocol/messages';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule],
+  imports: [],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -26,8 +25,10 @@ export class App implements OnInit, OnDestroy {
   protected focus = inject(FocusService);
   protected projectsService = inject(ProjectsService);
 
-  protected serverHost = 'ws://localhost:8080';
-  protected restBase = 'http://localhost:3000';
+  // Hardcoded during local development. In the final HoloLens build these will
+  // come from a config file or discovery step.
+  private readonly serverHost = 'ws://localhost:8080';
+  private readonly restBase = 'http://localhost:3000';
 
   protected lensState = toSignal(this.lens.state$, { initialValue: 'disconnected' as const });
   protected monitorState = toSignal(this.monitor.state$, { initialValue: 'disconnected' as const });
@@ -84,10 +85,6 @@ export class App implements OnInit, OnDestroy {
     this.playback.stop();
     this.lens.disconnect();
     this.monitor.disconnect();
-  }
-
-  reconnectMonitor(): void {
-    this.monitor.connect(`${this.serverHost}/monitor`);
   }
 
   toggleLens(): void {

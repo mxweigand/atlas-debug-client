@@ -33,9 +33,10 @@
   letter-spacing: 0.06em;
 }
 
-.header-state.connecting { color: var(--connecting); border-color: var(--connecting); }
-.header-state.connected  { color: var(--accent);     border-color: var(--accent); }
-.header-state.rejected   { color: var(--danger);     border-color: var(--danger); }
+.header-state.connecting   { color: var(--connecting); border-color: var(--connecting); }
+.header-state.disconnected { color: var(--connecting); border-color: var(--connecting); }
+.header-state.connected    { color: var(--accent);     border-color: var(--accent); }
+.header-state.rejected     { color: var(--danger);     border-color: var(--danger); }
 
 /* ── Panels ──────────────────────────────────────────────── */
 
@@ -335,18 +336,16 @@
   justify-content: space-between;
 }
 
-.project-name {
+/*
+ * Body text under a section label (Title / Description). Sits directly below
+ * a .panel-title so the label acts like a small caps caption.
+ */
+.project-field {
   font-size: 12px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.04em;
-}
-
-.project-summary {
-  font-size: 11px;
-  color: var(--text-muted);
+  color: var(--text);
   line-height: 1.5;
   margin: 0;
+  word-break: break-word;
 }
 
 .project-list {
