@@ -150,12 +150,14 @@ export class App implements OnInit, OnDestroy {
     this.expandedObjectIds.set(next);
   }
 
-  objectAsJson(obj: AtlasObject): string {
+  objectAsJsonLines(obj: AtlasObject): string[] {
+    // Split by newline so each key/value pair gets its own block box in the
+    // template — enables a per-source-line hanging indent on wrap.
     return JSON.stringify(
       { name: obj.name, summary: obj.summary, content: obj.content, geometry: obj.geometry },
       null,
       2,
-    );
+    ).split('\n');
   }
 
   /**

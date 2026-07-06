@@ -163,7 +163,11 @@
                 <span class="object-name">{{ obj.name }}</span>
               </div>
               @if (isObjectExpanded(obj.id)) {
-                <pre class="object-json">{{ objectAsJson(obj) }}</pre>
+                <div class="object-json">
+                  @for (line of objectAsJsonLines(obj); track $index) {
+                    <div class="object-json-line">{{ line }}</div>
+                  }
+                </div>
               }
             </li>
           } @empty {

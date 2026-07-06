@@ -429,10 +429,21 @@
   font-family: inherit;
   font-size: 10px;
   line-height: 1.4;
-  white-space: pre-wrap;
-  word-break: break-word;
   max-height: 240px;
   overflow-y: auto;
+}
+
+/*
+ * One block per JSON source line. Hanging indent (padding-left + negative
+ * text-indent) keeps the first visible glyph flush left but pushes browser-
+ * wrapped continuations of the same source line 4ch to the right — one
+ * indent level deeper than "content" sits in the pretty-printed JSON.
+ */
+.object-json-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding-left: 4ch;
+  text-indent: -4ch;
 }
 
 /* focus_update rows in the log dim to indicate they are noisy background */
