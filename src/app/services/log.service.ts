@@ -5,6 +5,9 @@ import { AUDIO_FORMAT } from '../protocol/audio';
 export interface TranscriptDelta {
   delta: string;
   audioOffsetMs: number;
+  /** Server-compensated: audioOffsetMs minus AUDIO_PLAYBACK_LATENCY_MS. Optional
+   * so old log entries from before the field existed still render. */
+  spokenOffsetMs?: number;
 }
 
 export interface LogEntry {
@@ -16,6 +19,9 @@ export interface LogEntry {
   audioStartWallclockMs?: number;
   /** Duration of `audio` in milliseconds. Precomputed once at ingestion. */
   audioDurationMs?: number;
+  /** Milliseconds of the leading lookback prefix the player should skip on
+   * playback. Only set for user_speech. */
+  playbackTrimMs?: number;
   itemId?: string;
   deltas?: TranscriptDelta[];
   /**
@@ -81,7 +87,11 @@ export class LogService {
   append(msg: ServerMessage): void {
     switch (msg.type) {
       case 'user_transcript_delta':
-        this.handleDelta(msg.itemId, { delta: msg.delta, audioOffsetMs: msg.audioOffsetMs });
+        this.handleDelta(msg.itemId, {
+          delta: msg.delta,
+          audioOffsetMs: msg.audioOffsetMs,
+          spokenOffsetMs: msg.spokenOffsetMs,
+        });
         return;
       case 'user_transcript':
         this.handleUserTranscript(msg.itemId, msg.transcript);
@@ -94,6 +104,7 @@ export class LogService {
           type: 'user_speech',
           audio: msg.audio,
           audioStartWallclockMs: msg.audioStartWallclockMs,
+          playbackTrimMs: msg.playbackTrimMs,
           audioDurationMs: pcm16Base64DurationMs(msg.audio),
           itemId: msg.itemId,
           deltas: this.pendingDeltasByItemId.get(msg.itemId),

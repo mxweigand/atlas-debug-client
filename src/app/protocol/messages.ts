@@ -128,16 +128,27 @@ export interface AssistantTranscriptMessage {
 }
 
 /**
- * Complete PCM16 audio (base64) of the user turn from speech_started to
- * speech_ended, plus the wallclock timestamp of the recording anchor (t=0
- * of the audio blob) and the OpenAI conversation item id that keys the
- * transcript and every delta for this turn. Monitor-only.
+ * Complete PCM16 audio (base64) of the user turn. The blob actually starts
+ * `AUDIO_LOOKBACK_MS` before speech_started because the server prepends its
+ * rolling mic buffer so the VAD-cut prefix survives.
+ *
+ * - `audioStartWallclockMs`: wallclock at t=0 of the blob (i.e. the oldest
+ *   lookback sample). Same anchor `audioOffsetMs`/`spokenOffsetMs` measure
+ *   against.
+ * - `playbackTrimMs`: how many ms of the leading lookback the client should
+ *   skip when playing the clip in a UI player. Equals
+ *   `DEIXIS_PIPELINE_LATENCY_MS`, leaving `lookbackMs - pipelineLatencyMs` of
+ *   safety padding for the VAD onset delay. The delta timeline is unchanged;
+ *   `spokenOffsetMs` on each delta still measures from t=0 of the blob.
+ *
+ * Monitor-only.
  */
 export interface UserSpeechMessage {
   type: 'user_speech';
   itemId: string;
   audio: string;
   audioStartWallclockMs: number;
+  playbackTrimMs: number;
 }
 
 /**
@@ -153,7 +164,10 @@ export interface AssistantSpeechMessage {
  * Streaming word/token fragment from the OpenAI transcription. One event per
  * delta. Monitor-only — used for latency alignment against the user_speech
  * player. `audioOffsetMs` is the delta's server-receive time relative to
- * `audioStartWallclockMs` of the same turn.
+ * `audioStartWallclockMs` of the same turn. `spokenOffsetMs` is the same
+ * value minus `DEIXIS_PIPELINE_LATENCY_MS`; it estimates when the word was
+ * actually spoken and is what the client should compare against the playback
+ * position to place the highlight on the currently-heard word.
  */
 export interface UserTranscriptDeltaMessage {
   type: 'user_transcript_delta';
@@ -161,6 +175,7 @@ export interface UserTranscriptDeltaMessage {
   delta: string;
   wallclockMs: number;
   audioOffsetMs: number;
+  spokenOffsetMs: number;
 }
 
 /**

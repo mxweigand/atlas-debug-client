@@ -28,10 +28,14 @@ export class PlaybackService {
     const url = URL.createObjectURL(new Blob([wav], { type: 'audio/wav' }));
     const audio = new Audio(url);
 
+    // Skip most of the lookback prefix so playback starts close to the real
+    // speech onset while keeping a small safety margin for VAD onset delay.
+    const startOffsetSec = (entry.playbackTrimMs ?? 0) / 1000;
+
     this.currentAudio = audio;
     this.currentUrl = url;
     this.playingEntryId.set(entry.id);
-    this.playingTimeMs.set(0);
+    this.playingTimeMs.set(startOffsetSec * 1000);
 
     const tick = (): void => {
       if (this.currentAudio !== audio) return;
@@ -39,6 +43,9 @@ export class PlaybackService {
       this.rafHandle = requestAnimationFrame(tick);
     };
 
+    audio.addEventListener('loadedmetadata', () => {
+      if (startOffsetSec > 0) audio.currentTime = startOffsetSec;
+    });
     audio.addEventListener('play', () => tick());
     audio.addEventListener('ended', () => this.stop());
     audio.addEventListener('error', () => this.stop());
@@ -71,11 +78,17 @@ export class PlaybackService {
   }
 }
 
-/** Last index i such that deltas[i].audioOffsetMs <= t, or -1 if none. */
+/**
+ * Last index i such that the delta's spoken time <= t (playback position, ms),
+ * or -1 if none. Prefers `spokenOffsetMs` (server-compensated: delta arrival
+ * minus playback latency). Falls back to raw `audioOffsetMs` for old entries
+ * that predate the field.
+ */
 function lastLeqIndex(deltas: TranscriptDelta[], t: number): number {
   let idx = -1;
   for (let i = 0; i < deltas.length; i++) {
-    if (deltas[i].audioOffsetMs <= t) idx = i;
+    const offset = deltas[i].spokenOffsetMs ?? deltas[i].audioOffsetMs;
+    if (offset <= t) idx = i;
     else break;
   }
   return idx;
