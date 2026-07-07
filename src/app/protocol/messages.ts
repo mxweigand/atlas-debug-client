@@ -4,11 +4,47 @@
 // ─── Project / object shapes (shared data model) ──────────────────────────────
 
 /**
+ * A 3D vector, serialized exactly as Unity's JsonUtility emits it (`{ x, y, z }`).
+ * Positions and sizes are in meters, Euler angles in degrees.
+ */
+export interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * Anchors an object to a physical QR code. `markerId` is the code's decoded
+ * string, `size` its printed edge length (m). `localPosition` /
+ * `localEulerAngles` locate the marker in the object's local (scaled) space, so
+ * the object's world pose can be reconstructed from the scanned marker pose.
+ */
+export interface QRAnchor {
+  markerId: string;
+  size: number;
+  localPosition: Vec3;
+  localEulerAngles: Vec3;
+}
+
+/**
+ * Geometry of an atlas object. Authored and owned exclusively by the HoloLens
+ * (created/updated via REST); the server stores it verbatim and never mutates
+ * it. `size` is the cuboid's extent (m), `eulerAngles` its world rotation at
+ * authoring time (deg), `anchors` the QR codes used to re-place it in the world.
+ */
+export interface AtlasGeometry {
+  size: Vec3;
+  eulerAngles: Vec3;
+  anchors: QRAnchor[];
+}
+
+/**
  * A single addressable object inside a project. `id` doubles as the focusId
  * emitted on /hololens — the same value the deixis resolver returns. `summary` is
  * short, injected verbatim into the system prompt at session start. `content`
  * is the full description, retrieved on demand via the describe_object tool.
- * `geometry` is opaque JSON reserved for future use (position, mesh, …).
+ * `geometry` follows {@link AtlasGeometry}; `null` until the HoloLens has
+ * authored a shape for the object.
  *
  * The parent project is not stored on the object — it's implicit from where
  * the object lives (either its JSON file or the active project).
@@ -18,12 +54,16 @@ export interface AtlasObject {
   name: string;
   summary: string;
   content: string;
-  geometry: unknown;
+  geometry: AtlasGeometry | null;
 }
 
 /**
  * A named collection of objects. `summary` is an optional project-level intro
  * also injected into the system prompt at session start.
+ *
+ * `id` is NOT stored in the project file — it is derived from the filename
+ * (`<id>.json`) when read, so filename and id can never diverge. It is present
+ * on the in-memory/API shape but omitted on disk.
  */
 export interface AtlasProject {
   id: string;
@@ -168,6 +208,20 @@ export interface ObjectUpdatedMessage {
   object: AtlasObject;
 }
 
+/** Broadcast when a new object is created via REST POST. */
+export interface ObjectCreatedMessage {
+  type: 'object_created';
+  projectId: string;
+  object: AtlasObject;
+}
+
+/** Broadcast when an object is deleted via REST DELETE. */
+export interface ObjectDeletedMessage {
+  type: 'object_deleted';
+  projectId: string;
+  objectId: string;
+}
+
 export type ServerMessage =
   | SpeechStartedMessage
   | SpeechEndedMessage
@@ -184,7 +238,9 @@ export type ServerMessage =
   | AssistantSpeechMessage
   | FocusUpdateBroadcastMessage
   | ProjectActivatedMessage
-  | ObjectUpdatedMessage;
+  | ObjectUpdatedMessage
+  | ObjectCreatedMessage
+  | ObjectDeletedMessage;
 
 // ─── Client -> Server ─────────────────────────────────────────────────────────
 

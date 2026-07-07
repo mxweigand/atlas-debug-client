@@ -65,4 +65,25 @@ export class ProjectsService {
       objects: current.objects.map((o) => (o.id === object.id ? object : o)),
     });
   }
+
+  /** Apply an incoming object_created broadcast to the active project. */
+  applyObjectCreate(projectId: string, object: AtlasObject): void {
+    const current = this.active();
+    if (!current || current.project.id !== projectId) return;
+    if (current.objects.some((o) => o.id === object.id)) return;
+    this.active.set({
+      project: current.project,
+      objects: [...current.objects, object],
+    });
+  }
+
+  /** Apply an incoming object_deleted broadcast to the active project. */
+  applyObjectDelete(projectId: string, objectId: string): void {
+    const current = this.active();
+    if (!current || current.project.id !== projectId) return;
+    this.active.set({
+      project: current.project,
+      objects: current.objects.filter((o) => o.id !== objectId),
+    });
+  }
 }

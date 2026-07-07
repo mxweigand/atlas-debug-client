@@ -130,6 +130,26 @@ export class LogService {
           detail: `hololens: ${msg.hololensClient ?? 'free'}  monitors: ${msg.monitorClients}`,
         });
         return;
+      case 'object_created':
+        this.pushEntry({
+          type: 'object_created',
+          detail: msg.object.name || msg.object.id,
+          expandedJson: msg.object,
+        });
+        return;
+      case 'object_updated':
+        this.pushEntry({
+          type: 'object_updated',
+          detail: msg.object.name || msg.object.id,
+          expandedJson: msg.object,
+        });
+        return;
+      case 'object_deleted':
+        this.pushEntry({
+          type: 'object_deleted',
+          detail: msg.objectId,
+        });
+        return;
       case 'focus_update':
         // Intentionally not logged — the heartbeat runs at ~4 Hz and would
         // drown out every other event. Live focus is visible in the sidebar.

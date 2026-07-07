@@ -66,6 +66,10 @@ export class App implements OnInit, OnDestroy {
           else this.projectsService.active.set(null);
         } else if (msg.type === 'object_updated') {
           this.projectsService.applyObjectUpdate(msg.projectId, msg.object);
+        } else if (msg.type === 'object_created') {
+          this.projectsService.applyObjectCreate(msg.projectId, msg.object);
+        } else if (msg.type === 'object_deleted') {
+          this.projectsService.applyObjectDelete(msg.projectId, msg.objectId);
         }
       }),
       // Assistant audio only ever arrives on /hololens.
