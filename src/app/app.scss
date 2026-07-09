@@ -386,6 +386,24 @@
   background: rgba(0, 207, 168, 0.10);
 }
 
+/* HoloLens (or emulating client) is actively pointing at this object — live
+   from the /monitor focus stream. Stronger than the mouse-hover highlight. */
+.object-entry-observed {
+  border-color: var(--accent);
+  background: rgba(0, 207, 168, 0.20);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.focus-badge {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--bg-panel);
+  background: var(--accent);
+}
+
 .object-row {
   display: flex;
   align-items: center;

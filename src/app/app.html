@@ -147,6 +147,7 @@
             @for (obj of detail.objects; track obj.id) {
               <li class="object-entry"
                   [class.object-entry-active]="focus.current() === obj.id"
+                  [class.object-entry-observed]="observedFocus() === obj.id"
                   (mouseenter)="hoverFocus(obj.id)">
                 <div class="object-row">
                   <button class="btn-toggle-json"
@@ -156,6 +157,9 @@
                   </button>
                   <span class="object-id">{{ obj.id }}</span>
                   <span class="object-name">{{ obj.name }}</span>
+                  @if (observedFocus() === obj.id) {
+                    <span class="focus-badge" title="HoloLens is pointing at this object">⬤ FOCUS</span>
+                  }
                 </div>
                 @if (isObjectExpanded(obj.id)) {
                   <div class="object-json">

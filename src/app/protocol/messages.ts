@@ -273,9 +273,11 @@ export interface HelloMessage {
  * Continuous pointing/focus stream from the /hololens client. Emitted on change
  * plus a low-rate heartbeat so the server always knows whether the pointer is
  * still on the same target. `focusId` is null when the user is not pointing
- * at any known object. `wallclockMs` is the client's Date.now() at capture
- * — the server aligns it against transcript delta timestamps to resolve
- * deictic references.
+ * at any known object. `wallclockMs` is the client's Date.now() at capture,
+ * kept for reference/debugging only: for deixis alignment the server stamps
+ * each focus sample with its own receive time, because the client clock may be
+ * skewed against the server clock (e.g. a real HoloLens on a separate device).
+ * That keeps focus and transcript-delta timestamps on one common clock.
  */
 export interface FocusUpdateMessage {
   type: 'focus_update';

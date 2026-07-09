@@ -48,6 +48,11 @@ export class App implements OnInit, OnDestroy {
   /** Objects the focus panel renders. Empty when no project active. */
   protected activeObjects = computed(() => this.projectsService.active()?.objects ?? []);
 
+  /** focusId the connected /hololens client (real HoloLens or emulator) last
+   * reported to the server — mirrored back via the monitor stream. Null when
+   * nothing is being pointed at. */
+  protected observedFocus = signal<string | null>(null);
+
   /** Entries whose object body is expanded in the right panel. */
   private expandedObjectIds = signal<Set<string>>(new Set());
 
@@ -70,6 +75,10 @@ export class App implements OnInit, OnDestroy {
           this.projectsService.applyObjectCreate(msg.projectId, msg.object);
         } else if (msg.type === 'object_deleted') {
           this.projectsService.applyObjectDelete(msg.projectId, msg.objectId);
+        } else if (msg.type === 'focus_update') {
+          // Der vom Server rebroadcastete Fokus des aktiven /hololens-Clients
+          // (echte HoloLens oder Emulator) — zeigt live, worauf gedeutet wird.
+          this.observedFocus.set(msg.focusId);
         }
       }),
       // Assistant audio only ever arrives on /hololens.
